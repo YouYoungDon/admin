@@ -27,6 +27,18 @@ export function removeKey(key: string): void {
   window.localStorage.removeItem(key);
 }
 
+export function readRawValue(key: string): string {
+  return window.localStorage.getItem(key) ?? '';
+}
+
+export function saveRawJson(key: string, rawJson: string): void {
+  if (!rawJson.trim()) {
+    removeKey(key);
+    return;
+  }
+  window.localStorage.setItem(key, JSON.stringify(JSON.parse(rawJson)));
+}
+
 export function unique(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
 }

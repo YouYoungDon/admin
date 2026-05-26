@@ -176,3 +176,39 @@ export function setRoomStage(stage: number): void {
   });
   audit('set-room-stage', String(safeStage));
 }
+
+export function setUserCounts(input: {
+  recordedDaysCount: number;
+  streak: number;
+  totalRecordCount: number;
+}): void {
+  const user = loadJson<UserLike | null>(STORAGE_KEYS.USER, null) ?? {};
+  const recordedDaysCount = Math.max(0, Math.floor(input.recordedDaysCount));
+  const streak = Math.max(0, Math.floor(input.streak));
+  const totalRecordCount = Math.max(0, Math.floor(input.totalRecordCount));
+  saveJson(STORAGE_KEYS.USER, {
+    level: user.level ?? 1,
+    streak,
+    totalRecordCount,
+    recordedDaysCount,
+    roomStage: user.roomStage ?? 1,
+    pebbleCount: user.pebbleCount ?? loadJson<number>(STORAGE_KEYS.PEBBLE_COUNT, 0),
+    restsToday: user.restsToday ?? 0,
+    lastRestDate: user.lastRestDate ?? null,
+    lastRestAt: user.lastRestAt ?? null,
+  });
+  audit('set-user-counts', `days=${recordedDaysCount}, streak=${streak}, total=${totalRecordCount}`);
+}
+
+export function setLastEmotion(emotion: string): void {
+  saveJson(STORAGE_KEYS.LAST_EMOTION, emotion);
+  audit('set-last-emotion', emotion);
+}
+
+export function setLastVisitDate(date: string): void {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error('Last visit date must be YYYY-MM-DD.');
+  }
+  saveJson(STORAGE_KEYS.LAST_VISIT_DATE, date);
+  audit('set-last-visit-date', date);
+}

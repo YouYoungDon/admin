@@ -1,82 +1,89 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sobagi Admin</title>
+    <title>소박이 운영자 페이지</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="topbar">
       <div>
-        <p class="eyebrow">Internal local QA</p>
-        <h1>Sobagi Admin / Debug Panel</h1>
+        <p class="eyebrow">소박이 내부 운영 / QA</p>
+        <h1>소박이 운영자 페이지</h1>
       </div>
-      <button id="refresh" type="button">Refresh</button>
+      <button id="refresh" type="button">새로고침</button>
     </header>
 
     <main>
       <section class="notice">
-        <strong>Local-only tool.</strong>
-        This panel reads and writes browser localStorage keys that mirror Sobagi
-        storage keys. It does not connect to production data and it does not
-        modify the Sobagi app source.
+        <strong>로컬 전용 도구입니다.</strong>
+        이 페이지는 소박이 앱의 스토리지 키와 같은 이름의 브라우저 localStorage를 읽고 씁니다.
+        현재는 운영/QA용 로컬 패널이며, 실제 서버 발송이나 프로덕션 사용자 데이터 조작은 하지 않습니다.
       </section>
 
+      <nav class="quick-nav" aria-label="빠른 이동">
+        <a href="#messages">편지/공지</a>
+        <a href="#mailbox">우편함</a>
+        <a href="#items">아이템/가방</a>
+        <a href="#state">사용자 상태</a>
+        <a href="#debug">디버그</a>
+        <a href="#storage">원시 스토리지</a>
+      </nav>
+
       <section class="grid">
-        <article class="panel span-2">
+        <article id="messages" class="panel span-2">
           <div class="panel-head">
-            <h2>Operator Composer</h2>
-            <button id="clear-outbox" class="danger" type="button">Clear outbox</button>
+            <h2>편지/공지 작성</h2>
+            <button id="clear-outbox" class="danger" type="button">작성함 비우기</button>
           </div>
           <div class="form-grid">
             <label>
-              Type
+              종류
               <select id="message-kind">
-                <option value="letter">Letter</option>
-                <option value="notice">Notice</option>
+                <option value="letter">편지</option>
+                <option value="notice">공지</option>
               </select>
             </label>
             <label>
-              Target
+              대상
               <select id="message-target">
-                <option value="local-qa">Local QA only</option>
-                <option value="all-users">All users payload</option>
-                <option value="segment">Segment payload</option>
+                <option value="local-qa">로컬 QA</option>
+                <option value="all-users">전체 사용자 페이로드</option>
+                <option value="segment">세그먼트 페이로드</option>
               </select>
             </label>
           </div>
           <label>
-            Title
-            <input id="message-title" type="text" placeholder="Short operator title" />
+            제목
+            <input id="message-title" type="text" placeholder="운영자가 구분할 제목" />
           </label>
           <label>
-            Body
-            <textarea id="message-body" rows="5" placeholder="Write the letter or notice body"></textarea>
+            내용
+            <textarea id="message-body" rows="5" placeholder="보낼 편지나 공지 내용을 적어주세요"></textarea>
           </label>
           <label>
-            Segment note
-            <input id="message-segment" type="text" placeholder="Optional targeting note" />
+            대상 메모
+            <input id="message-segment" type="text" placeholder="선택: 대상 조건이나 메모" />
           </label>
-          <button id="queue-message" type="button">Queue message payload</button>
+          <button id="queue-message" type="button">발송 페이로드 만들기</button>
           <p class="hint">
-            Custom letters/notices are stored in the admin outbox. The current
-            Sobagi app only renders built-in letter ids until a backend/app
-            inbox integration is wired.
+            커스텀 편지/공지는 현재 운영자 작성함에만 저장됩니다. 앱이 바로 읽는 것은 기존 편지 ID 전달,
+            읽음 상태, 아이템/상태 조작입니다.
           </p>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <h2>Operator Outbox</h2>
+            <h2>운영자 작성함</h2>
           </div>
           <div id="operator-outbox" class="list compact"></div>
         </article>
 
-        <article class="panel span-2">
+        <article id="mailbox" class="panel span-2">
           <div class="panel-head">
-            <h2>Mailbox</h2>
-            <button id="reset-mailbox" class="danger" type="button">Reset mailbox</button>
+            <h2>우편함 관리</h2>
+            <button id="reset-mailbox" class="danger" type="button">우편함 초기화</button>
           </div>
           <div id="mailbox-summary" class="summary"></div>
           <div id="mailbox-list" class="list"></div>
@@ -84,31 +91,31 @@
 
         <article class="panel">
           <div class="panel-head">
-            <h2>Force Letter</h2>
+            <h2>편지 강제 전달</h2>
           </div>
           <label>
-            Letter id
+            편지 ID
             <select id="letter-select"></select>
           </label>
-          <button id="force-letter" type="button">Force deliver</button>
+          <button id="force-letter" type="button">선택한 편지 전달</button>
         </article>
 
-        <article class="panel span-2">
+        <article id="items" class="panel span-2">
           <div class="panel-head">
-            <h2>Discovery / Bag</h2>
+            <h2>발견 / 가방 현황</h2>
             <div class="actions">
-              <button id="clear-discovery" class="danger" type="button">Clear discovery queue</button>
-              <button id="reset-bag" class="danger" type="button">Reset bag state</button>
+              <button id="clear-discovery" class="danger" type="button">발견 대기열 비우기</button>
+              <button id="reset-bag" class="danger" type="button">가방/발견 초기화</button>
             </div>
           </div>
           <div id="discovery-summary" class="summary"></div>
           <div class="split">
             <div>
-              <h3>Queue</h3>
+              <h3>발견 대기열</h3>
               <div id="queue-list" class="list compact"></div>
             </div>
             <div>
-              <h3>Found trinkets</h3>
+              <h3>발견한 장신구</h3>
               <div id="found-list" class="list compact"></div>
             </div>
           </div>
@@ -116,97 +123,146 @@
 
         <article class="panel">
           <div class="panel-head">
-            <h2>Force Item</h2>
+            <h2>아이템 빠른 조작</h2>
           </div>
           <label>
-            Item id
+            아이템 ID
             <select id="item-select"></select>
           </label>
-          <button id="enqueue-item" type="button">Force enqueue discoverable</button>
-          <button id="keep-item" type="button">Force keep item</button>
-          <button id="sample-discovery" type="button">Trigger sample discovery</button>
+          <button id="enqueue-item" type="button">발견 대기열에 넣기</button>
+          <button id="keep-item" type="button">가방에 보관 처리</button>
+          <button id="sample-discovery" type="button">샘플 발견 만들기</button>
         </article>
 
         <article class="panel span-2">
           <div class="panel-head">
-            <h2>Item Controls</h2>
+            <h2>아이템 세부 조절</h2>
           </div>
           <div class="form-grid">
             <label>
-              Item id
+              아이템 ID
               <select id="operator-item-select"></select>
             </label>
             <label>
-              Found count
+              발견 횟수
               <input id="found-count" type="number" min="0" step="1" value="1" />
             </label>
           </div>
           <div class="button-grid">
-            <button id="op-add-kept" type="button">Add kept</button>
-            <button id="op-remove-kept" type="button">Remove kept</button>
-            <button id="op-add-found" type="button">Add found entry</button>
-            <button id="op-remove-found" type="button">Remove one found entry</button>
-            <button id="op-set-found-count" type="button">Set found count</button>
-            <button id="op-set-queue-front" type="button">Set queue front</button>
-            <button id="op-remove-queued" type="button">Remove from queue</button>
-            <button id="op-set-pending" type="button">Set pending item</button>
-            <button id="op-clear-pending" type="button">Clear pending item</button>
-            <button id="op-set-staged" type="button">Set staged item</button>
-            <button id="op-clear-staged" type="button">Clear staged item</button>
+            <button id="op-add-kept" type="button">보관 추가</button>
+            <button id="op-remove-kept" type="button">보관 제거</button>
+            <button id="op-add-found" type="button">발견 1회 추가</button>
+            <button id="op-remove-found" type="button">발견 1회 제거</button>
+            <button id="op-set-found-count" type="button">발견 횟수 맞추기</button>
+            <button id="op-set-queue-front" type="button">대기열 맨 앞으로</button>
+            <button id="op-remove-queued" type="button">대기열에서 제거</button>
+            <button id="op-set-pending" type="button">pending 아이템 설정</button>
+            <button id="op-clear-pending" type="button">pending 비우기</button>
+            <button id="op-set-staged" type="button">staged 아이템 설정</button>
+            <button id="op-clear-staged" type="button">staged 비우기</button>
           </div>
         </article>
 
-        <article class="panel">
+        <article id="state" class="panel span-2">
           <div class="panel-head">
-            <h2>State Controls</h2>
-          </div>
-          <label>
-            Pebble count
-            <input id="pebble-count-input" type="number" min="0" step="1" value="0" />
-          </label>
-          <button id="op-set-pebbles" type="button">Set pebbles</button>
-          <label>
-            Room stage
-            <input id="room-stage-input" type="number" min="1" max="5" step="1" value="1" />
-          </label>
-          <button id="op-set-room-stage" type="button">Set room stage</button>
-        </article>
-
-        <article class="panel span-2">
-          <div class="panel-head">
-            <h2>User / App State</h2>
+            <h2>사용자 / 앱 상태</h2>
           </div>
           <div id="state-summary" class="kv"></div>
         </article>
 
-        <article class="panel span-2">
+        <article class="panel">
           <div class="panel-head">
-            <h2>Debug Actions</h2>
+            <h2>상태 직접 설정</h2>
+          </div>
+          <label>
+            기록일 수
+            <input id="recorded-days-input" type="number" min="0" step="1" value="0" />
+          </label>
+          <label>
+            연속 기록
+            <input id="streak-input" type="number" min="0" step="1" value="0" />
+          </label>
+          <label>
+            전체 기록 수
+            <input id="total-record-input" type="number" min="0" step="1" value="0" />
+          </label>
+          <button id="op-set-user-counts" type="button">기록 카운트 저장</button>
+          <label>
+            현재 감정
+            <select id="emotion-select">
+              <option value="happy">happy</option>
+              <option value="excited">excited</option>
+              <option value="surprised">surprised</option>
+              <option value="sleepy">sleepy</option>
+              <option value="soft-sad">soft-sad</option>
+            </select>
+          </label>
+          <button id="op-set-emotion" type="button">감정 저장</button>
+          <label>
+            조약돌 수
+            <input id="pebble-count-input" type="number" min="0" step="1" value="0" />
+          </label>
+          <button id="op-set-pebbles" type="button">조약돌 저장</button>
+          <label>
+            방 단계
+            <input id="room-stage-input" type="number" min="1" max="5" step="1" value="1" />
+          </label>
+          <button id="op-set-room-stage" type="button">방 단계 저장</button>
+          <label>
+            마지막 방문일
+            <input id="last-visit-input" type="date" />
+          </label>
+          <button id="op-set-last-visit" type="button">마지막 방문일 저장</button>
+        </article>
+
+        <article id="debug" class="panel span-2">
+          <div class="panel-head">
+            <h2>디버그 액션</h2>
           </div>
           <div class="button-grid">
-            <button id="seed-expenses" type="button">Seed example expenses</button>
-            <button id="clear-expenses" class="danger" type="button">Clear example expenses</button>
-            <button id="simulate-next-day" type="button">Simulate next day</button>
-            <button id="simulate-morning" type="button">Set admin clock: morning</button>
-            <button id="simulate-night" type="button">Set admin clock: late night</button>
-            <button id="fresh-wipe" class="danger" type="button">Fresh wipe local app state</button>
+            <button id="seed-expenses" type="button">예시 기록 심기</button>
+            <button id="clear-expenses" class="danger" type="button">예시 기록 제거</button>
+            <button id="simulate-next-day" type="button">다음 날 진입 시뮬레이션</button>
+            <button id="simulate-morning" type="button">관리자 시계: 아침</button>
+            <button id="simulate-night" type="button">관리자 시계: 밤</button>
+            <button id="fresh-wipe" class="danger" type="button">로컬 앱 상태 전체 삭제</button>
           </div>
           <p class="hint">
-            Time simulation writes admin/debug keys and safe rollover hints only.
-            The production app does not consume admin-only clock overrides.
+            시간 시뮬레이션은 관리자 키와 안전한 롤오버 힌트만 기록합니다. 현재 소박이 앱은 관리자 시계 override를 읽지 않습니다.
           </p>
         </article>
 
-        <article class="panel span-2">
+        <article id="storage" class="panel span-2">
           <div class="panel-head">
-            <h2>Raw Storage</h2>
+            <h2>원시 스토리지</h2>
           </div>
+          <div class="form-grid">
+            <label>
+              키
+              <select id="raw-key-select"></select>
+            </label>
+            <label>
+              빠른 작업
+              <button id="load-raw-key" type="button">선택 키 불러오기</button>
+            </label>
+          </div>
+          <label>
+            JSON 값
+            <textarea id="raw-editor" rows="8" placeholder="선택한 키의 JSON 값"></textarea>
+          </label>
+          <div class="button-grid">
+            <button id="save-raw-key" type="button">JSON 저장</button>
+            <button id="remove-raw-key" class="danger" type="button">선택 키 삭제</button>
+          </div>
+          <p class="hint">
+            이 영역은 마지막 안전망입니다. 구조를 잘못 저장하면 앱 상태가 깨질 수 있으니 QA 목적일 때만 사용하세요.
+          </p>
           <div id="raw-storage" class="raw"></div>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <h2>Audit Log</h2>
+            <h2>작업 로그</h2>
           </div>
           <div id="audit-log" class="list compact"></div>
         </article>
