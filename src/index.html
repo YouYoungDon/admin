@@ -26,6 +26,55 @@
       <section class="grid">
         <article class="panel span-2">
           <div class="panel-head">
+            <h2>Operator Composer</h2>
+            <button id="clear-outbox" class="danger" type="button">Clear outbox</button>
+          </div>
+          <div class="form-grid">
+            <label>
+              Type
+              <select id="message-kind">
+                <option value="letter">Letter</option>
+                <option value="notice">Notice</option>
+              </select>
+            </label>
+            <label>
+              Target
+              <select id="message-target">
+                <option value="local-qa">Local QA only</option>
+                <option value="all-users">All users payload</option>
+                <option value="segment">Segment payload</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Title
+            <input id="message-title" type="text" placeholder="Short operator title" />
+          </label>
+          <label>
+            Body
+            <textarea id="message-body" rows="5" placeholder="Write the letter or notice body"></textarea>
+          </label>
+          <label>
+            Segment note
+            <input id="message-segment" type="text" placeholder="Optional targeting note" />
+          </label>
+          <button id="queue-message" type="button">Queue message payload</button>
+          <p class="hint">
+            Custom letters/notices are stored in the admin outbox. The current
+            Sobagi app only renders built-in letter ids until a backend/app
+            inbox integration is wired.
+          </p>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Operator Outbox</h2>
+          </div>
+          <div id="operator-outbox" class="list compact"></div>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
             <h2>Mailbox</h2>
             <button id="reset-mailbox" class="danger" type="button">Reset mailbox</button>
           </div>
@@ -80,6 +129,51 @@
 
         <article class="panel span-2">
           <div class="panel-head">
+            <h2>Item Controls</h2>
+          </div>
+          <div class="form-grid">
+            <label>
+              Item id
+              <select id="operator-item-select"></select>
+            </label>
+            <label>
+              Found count
+              <input id="found-count" type="number" min="0" step="1" value="1" />
+            </label>
+          </div>
+          <div class="button-grid">
+            <button id="op-add-kept" type="button">Add kept</button>
+            <button id="op-remove-kept" type="button">Remove kept</button>
+            <button id="op-add-found" type="button">Add found entry</button>
+            <button id="op-remove-found" type="button">Remove one found entry</button>
+            <button id="op-set-found-count" type="button">Set found count</button>
+            <button id="op-set-queue-front" type="button">Set queue front</button>
+            <button id="op-remove-queued" type="button">Remove from queue</button>
+            <button id="op-set-pending" type="button">Set pending item</button>
+            <button id="op-clear-pending" type="button">Clear pending item</button>
+            <button id="op-set-staged" type="button">Set staged item</button>
+            <button id="op-clear-staged" type="button">Clear staged item</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>State Controls</h2>
+          </div>
+          <label>
+            Pebble count
+            <input id="pebble-count-input" type="number" min="0" step="1" value="0" />
+          </label>
+          <button id="op-set-pebbles" type="button">Set pebbles</button>
+          <label>
+            Room stage
+            <input id="room-stage-input" type="number" min="1" max="5" step="1" value="1" />
+          </label>
+          <button id="op-set-room-stage" type="button">Set room stage</button>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
             <h2>User / App State</h2>
           </div>
           <div id="state-summary" class="kv"></div>
@@ -108,6 +202,13 @@
             <h2>Raw Storage</h2>
           </div>
           <div id="raw-storage" class="raw"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Audit Log</h2>
+          </div>
+          <div id="audit-log" class="list compact"></div>
         </article>
       </section>
     </main>

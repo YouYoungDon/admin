@@ -26,6 +26,8 @@ export const STORAGE_KEYS = {
 export const ADMIN_KEYS = {
   CLOCK_OVERRIDE: 'sobagi-admin-clock-override',
   LAST_ACTION: 'sobagi-admin-last-action',
+  OPERATOR_OUTBOX: 'sobagi-admin-operator-outbox',
+  OPERATOR_AUDIT_LOG: 'sobagi-admin-operator-audit-log',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
@@ -104,3 +106,24 @@ export const ALL_STORAGE_KEYS: string[] = [
   ...Object.values(STORAGE_KEYS),
   ...Object.values(ADMIN_KEYS),
 ];
+
+export type OperatorMessageKind = 'letter' | 'notice';
+
+export type OperatorMessage = {
+  id: string;
+  kind: OperatorMessageKind;
+  title: string;
+  body: string;
+  target: 'local-qa' | 'all-users' | 'segment';
+  segmentNote?: string;
+  status: 'draft' | 'queued' | 'sent-local';
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AuditEntry = {
+  id: string;
+  action: string;
+  detail: string;
+  createdAt: string;
+};

@@ -25,6 +25,7 @@ add routes, screens, or behavior to the production app.
 - `src/discovery.ts` - discovery queue, kept/found item actions.
 - `src/state.ts` - app state summaries and raw storage view.
 - `src/debug-actions.ts` - reset, seed, and simulation helpers.
+- `src/operator.ts` - operator outbox, audit log, and direct state controls.
 - `src/styles.css` - plain internal UI styling.
 
 ## Run
@@ -57,6 +58,9 @@ npm run build
 - This is local/dev first. It mutates only the browser storage visible to the
   page where it is opened.
 - It does not read or mutate production user data.
+- Custom operator letters/notices are queued into an admin-only outbox payload.
+  They are not visible in the Sobagi app until a backend/app inbox integration
+  is explicitly wired later.
 - `Fresh wipe local app state`, mailbox reset, bag reset, and seeded-expense
   clearing require confirmation.
 - Time simulation writes admin/debug keys and safe rollover hints only. The
@@ -65,6 +69,14 @@ npm run build
   change, update `src/sobagi-schema.ts`.
 
 ## Current v1 Coverage
+
+- Operator messaging:
+  - compose letter/notice payloads
+  - target local QA, all-users payload, or segment payload
+  - inspect generated JSON payloads
+  - mark payload as locally sent
+  - delete/clear queued payloads
+  - audit operator actions
 
 - Mailbox:
   - delivered/read/unread listing
@@ -79,6 +91,11 @@ npm run build
   - found trinkets and duplicate counts
   - force enqueue
   - force keep
+  - add/remove kept item ids
+  - add/remove found entries
+  - set found duplicate count
+  - set queue front
+  - set/clear staged and pending item ids
   - clear queue
   - reset bag/discovery state
   - sample discovery trigger
@@ -95,6 +112,8 @@ npm run build
   - fresh wipe known local state
   - reset mailbox
   - reset discovery/bag
+  - set pebble count
+  - set room stage
   - simulate next day
   - admin-only morning/night clock marker
   - seed and clear example expenses

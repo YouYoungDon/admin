@@ -28,6 +28,25 @@ import {
 import { getAppStateSummary } from './state';
 import { ITEMS, LETTERS } from './sobagi-schema';
 import { readRawStorage } from './storage-adapter';
+import {
+  addFoundItem,
+  addKeptItem,
+  clearOutbox,
+  deleteMessage,
+  listAuditLog,
+  listOutbox,
+  markMessageSentLocal,
+  queueOperatorMessage,
+  removeFoundItem,
+  removeKeptItem,
+  removeQueuedItem,
+  setFoundItemCount,
+  setPebbleCount,
+  setPendingItem,
+  setQueueFront,
+  setRoomStage,
+  setStagedItem,
+} from './operator';
 
 function byId<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
@@ -66,6 +85,45 @@ function setOptions(select: HTMLSelectElement, rows: Array<{ id: string; label: 
 
 function selectedValue(id: string): string {
   return byId<HTMLSelectElement>(id).value;
+}
+
+function inputValue(id: string): string {
+  return byId<HTMLInputElement>(id).value;
+}
+
+function numberValue(id: string): number {
+  const value = Number(inputValue(id));
+  if (!Number.isFinite(value)) throw new Error(`${id} must be a number.`);
+  return value;
+}
+
+function textareaValue(id: string): string {
+  return byId<HTMLTextAreaElement>(id).value;
+}
+
+function renderOperatorOutbox(): void {
+  const outbox = listOutbox();
+  byId('operator-outbox').innerHTML = outbox.length === 0
+    ? '<div class="row muted">empty</div>'
+    : outbox.map((message) => `
+      <div class="row">
+        <div class="row-head">
+          <div class="row-title">${escapeText(message.kind)} · ${escapeText(message.title)}</div>
+          <span class="pill ${message.status === 'sent-local' ? 'ok' : 'warn'}">${escapeText(message.status)}</span>
+        </div>
+        <div class="muted">${escapeText(message.id)} · ${escapeText(message.target)} · ${escapeText(message.createdAt)}</div>
+        <div>${escapeText(message.body)}</div>
+        ${message.segmentNote ? `<div class="muted">segment: ${escapeText(message.segmentNote)}</div>` : ''}
+        <details>
+          <summary>Payload</summary>
+          <pre class="payload">${escapeText(JSON.stringify(message, null, 2))}</pre>
+        </details>
+        <div class="row-actions">
+          <button data-message-local="${escapeText(message.id)}" type="button">Mark sent local</button>
+          <button data-message-delete="${escapeText(message.id)}" class="danger" type="button">Delete</button>
+        </div>
+      </div>
+    `).join('');
 }
 
 function renderMailbox(): void {
@@ -142,6 +200,19 @@ function renderRaw(): void {
   byId('raw-storage').textContent = JSON.stringify(rows, null, 2);
 }
 
+function renderAuditLog(): void {
+  const rows = listAuditLog();
+  byId('audit-log').innerHTML = rows.length === 0
+    ? '<div class="row muted">empty</div>'
+    : rows.slice(0, 20).map((entry) => `
+      <div class="row">
+        <div class="row-title">${escapeText(entry.action)}</div>
+        <div>${escapeText(entry.detail)}</div>
+        <div class="muted">${escapeText(entry.createdAt)}</div>
+      </div>
+    `).join('');
+}
+
 function wireDynamicActions(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-letter-deliver]').forEach((node) => {
     node.addEventListener('click', () => {
@@ -163,21 +234,53 @@ function wireDynamicActions(): void {
       render();
     });
   });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-message-local]').forEach((node) => {
+    node.addEventListener('click', () => {
+      markMessageSentLocal(node.dataset.messageLocal ?? '');
+      render();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-message-delete]').forEach((node) => {
+    node.addEventListener('click', () => {
+      confirmDanger('Delete this queued operator message?', () => deleteMessage(node.dataset.messageDelete ?? ''));
+      render();
+    });
+  });
 }
 
 function render(): void {
+  renderOperatorOutbox();
   renderMailbox();
   renderDiscovery();
   renderState();
   renderRaw();
+  renderAuditLog();
   wireDynamicActions();
 }
 
 function boot(): void {
   setOptions(byId<HTMLSelectElement>('letter-select'), LETTERS);
   setOptions(byId<HTMLSelectElement>('item-select'), ITEMS);
+  setOptions(byId<HTMLSelectElement>('operator-item-select'), ITEMS);
 
   button('refresh', render);
+  button('queue-message', () => {
+    const message = queueOperatorMessage({
+      kind: selectedValue('message-kind') === 'notice' ? 'notice' : 'letter',
+      target: selectedValue('message-target') as 'local-qa' | 'all-users' | 'segment',
+      title: inputValue('message-title'),
+      body: textareaValue('message-body'),
+      segmentNote: inputValue('message-segment'),
+    });
+    byId<HTMLInputElement>('message-title').value = '';
+    byId<HTMLTextAreaElement>('message-body').value = '';
+    byId<HTMLInputElement>('message-segment').value = '';
+    window.alert(`Queued ${message.kind}: ${message.id}`);
+  });
+  button('clear-outbox', () => confirmDanger('Clear all queued operator messages?', clearOutbox));
+
   button('force-letter', () => forceDeliverLetter(selectedValue('letter-select')));
   button('reset-mailbox', () => confirmDanger('Reset delivered/read mailbox state?', resetMailbox));
 
@@ -193,6 +296,19 @@ function boot(): void {
     resetFoundTrinkets();
     resetDiscoveryAndBagState();
   }));
+  button('op-add-kept', () => addKeptItem(selectedValue('operator-item-select')));
+  button('op-remove-kept', () => removeKeptItem(selectedValue('operator-item-select')));
+  button('op-add-found', () => addFoundItem(selectedValue('operator-item-select')));
+  button('op-remove-found', () => removeFoundItem(selectedValue('operator-item-select')));
+  button('op-set-found-count', () => setFoundItemCount(selectedValue('operator-item-select'), numberValue('found-count')));
+  button('op-set-queue-front', () => setQueueFront(selectedValue('operator-item-select')));
+  button('op-remove-queued', () => removeQueuedItem(selectedValue('operator-item-select')));
+  button('op-set-pending', () => setPendingItem(selectedValue('operator-item-select')));
+  button('op-clear-pending', () => setPendingItem(null));
+  button('op-set-staged', () => setStagedItem(selectedValue('operator-item-select')));
+  button('op-clear-staged', () => setStagedItem(null));
+  button('op-set-pebbles', () => setPebbleCount(numberValue('pebble-count-input')));
+  button('op-set-room-stage', () => setRoomStage(numberValue('room-stage-input')));
 
   button('seed-expenses', seedExampleExpenses);
   button('clear-expenses', () => confirmDanger('Remove admin-seeded expenses only?', clearExampleExpenses));
