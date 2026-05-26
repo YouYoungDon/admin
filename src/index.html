@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sobagi Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Internal local QA</p>
+        <h1>Sobagi Admin / Debug Panel</h1>
+      </div>
+      <button id="refresh" type="button">Refresh</button>
+    </header>
+
+    <main>
+      <section class="notice">
+        <strong>Local-only tool.</strong>
+        This panel reads and writes browser localStorage keys that mirror Sobagi
+        storage keys. It does not connect to production data and it does not
+        modify the Sobagi app source.
+      </section>
+
+      <section class="grid">
+        <article class="panel span-2">
+          <div class="panel-head">
+            <h2>Mailbox</h2>
+            <button id="reset-mailbox" class="danger" type="button">Reset mailbox</button>
+          </div>
+          <div id="mailbox-summary" class="summary"></div>
+          <div id="mailbox-list" class="list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Force Letter</h2>
+          </div>
+          <label>
+            Letter id
+            <select id="letter-select"></select>
+          </label>
+          <button id="force-letter" type="button">Force deliver</button>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
+            <h2>Discovery / Bag</h2>
+            <div class="actions">
+              <button id="clear-discovery" class="danger" type="button">Clear discovery queue</button>
+              <button id="reset-bag" class="danger" type="button">Reset bag state</button>
+            </div>
+          </div>
+          <div id="discovery-summary" class="summary"></div>
+          <div class="split">
+            <div>
+              <h3>Queue</h3>
+              <div id="queue-list" class="list compact"></div>
+            </div>
+            <div>
+              <h3>Found trinkets</h3>
+              <div id="found-list" class="list compact"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Force Item</h2>
+          </div>
+          <label>
+            Item id
+            <select id="item-select"></select>
+          </label>
+          <button id="enqueue-item" type="button">Force enqueue discoverable</button>
+          <button id="keep-item" type="button">Force keep item</button>
+          <button id="sample-discovery" type="button">Trigger sample discovery</button>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
+            <h2>User / App State</h2>
+          </div>
+          <div id="state-summary" class="kv"></div>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
+            <h2>Debug Actions</h2>
+          </div>
+          <div class="button-grid">
+            <button id="seed-expenses" type="button">Seed example expenses</button>
+            <button id="clear-expenses" class="danger" type="button">Clear example expenses</button>
+            <button id="simulate-next-day" type="button">Simulate next day</button>
+            <button id="simulate-morning" type="button">Set admin clock: morning</button>
+            <button id="simulate-night" type="button">Set admin clock: late night</button>
+            <button id="fresh-wipe" class="danger" type="button">Fresh wipe local app state</button>
+          </div>
+          <p class="hint">
+            Time simulation writes admin/debug keys and safe rollover hints only.
+            The production app does not consume admin-only clock overrides.
+          </p>
+        </article>
+
+        <article class="panel span-2">
+          <div class="panel-head">
+            <h2>Raw Storage</h2>
+          </div>
+          <div id="raw-storage" class="raw"></div>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

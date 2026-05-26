@@ -1,0 +1,13 @@
+{
+  "name": "sobagi-admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && node scripts/copy-static.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
