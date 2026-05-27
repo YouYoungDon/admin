@@ -42,9 +42,20 @@ Build:
 npm run build
 ```
 
-Open `dist/index.html` in a browser.
+Run the admin web/API server:
 
-For quick local iteration, build again after edits and refresh the browser.
+```bash
+npm run serve
+```
+
+Open `http://127.0.0.1:4173`.
+
+The same server exposes:
+
+- `POST /api/messages` - create an operator letter for all users or one user.
+- `GET /api/messages` - list operator letters.
+- `DELETE /api/messages/:id` - remove an operator letter.
+- `GET /api/letters?userId=...` - app-facing letter feed.
 
 ## Verify
 
@@ -58,9 +69,10 @@ npm run build
 - This is local/dev first. It mutates only the browser storage visible to the
   page where it is opened.
 - It does not read or mutate production user data.
-- Custom operator letters/notices are queued into an admin-only outbox payload.
-  They are not visible in the Sobagi app until a backend/app inbox integration
-  is explicitly wired later.
+- Operator messages are all letters. The Sobagi app reads them through
+  `/api/letters?userId=...` and shows them in the normal mailbox.
+- The local server stores messages in `data/messages.json`, which is ignored by
+  git.
 - `Fresh wipe local app state`, mailbox reset, bag reset, and seeded-expense
   clearing require confirmation.
 - Time simulation writes admin/debug keys and safe rollover hints only. The
@@ -70,12 +82,11 @@ npm run build
 
 ## Current v1 Coverage
 
-- Operator messaging:
-  - compose letter/notice payloads
-  - target local QA, all-users payload, or segment payload
+- Operator letters:
+  - send a letter to all users
+  - send a letter to a specific app user id
   - inspect generated JSON payloads
-  - mark payload as locally sent
-  - delete/clear queued payloads
+  - delete/clear queued letters
   - audit operator actions
 
 - Mailbox:

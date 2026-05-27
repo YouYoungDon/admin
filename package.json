@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc && node scripts/copy-static.mjs"
+    "build": "tsc && node scripts/copy-static.mjs",
+    "serve": "npm run build && node server/server.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

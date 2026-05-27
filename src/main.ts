@@ -35,7 +35,7 @@ import {
   deleteMessage,
   listAuditLog,
   listOutbox,
-  markMessageSentLocal,
+  markMessageSentServer,
   queueOperatorMessage,
   removeFoundItem,
   removeKeptItem,
@@ -104,6 +104,33 @@ function textareaValue(id: string): string {
   return byId<HTMLTextAreaElement>(id).value;
 }
 
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error ?? '요청에 실패했습니다.');
+  return payload as T;
+}
+
+function messageInput() {
+  const target = selectedValue('message-target') === 'user' ? 'user' : 'all';
+  return {
+    title: inputValue('message-title'),
+    body: textareaValue('message-body'),
+    sig: inputValue('message-sig') || '— 소박이',
+    target,
+    targetUserId: target === 'user' ? inputValue('message-user-id') : undefined,
+  } as const;
+}
+
+function clearMessageForm(): void {
+  byId<HTMLInputElement>('message-title').value = '';
+  byId<HTMLTextAreaElement>('message-body').value = '';
+}
+
 function renderOperatorOutbox(): void {
   const outbox = listOutbox();
   byId('operator-outbox').innerHTML = outbox.length === 0
@@ -111,18 +138,18 @@ function renderOperatorOutbox(): void {
     : outbox.map((message) => `
       <div class="row">
         <div class="row-head">
-          <div class="row-title">${escapeText(message.kind === 'notice' ? '공지' : '편지')} · ${escapeText(message.title)}</div>
-          <span class="pill ${message.status === 'sent-local' ? 'ok' : 'warn'}">${escapeText(statusLabel(message.status))}</span>
+          <div class="row-title">편지 · ${escapeText(message.title)}</div>
+          <span class="pill ${message.status === 'sent-server' ? 'ok' : 'warn'}">${escapeText(statusLabel(message.status))}</span>
         </div>
         <div class="muted">${escapeText(message.id)} · ${escapeText(targetLabel(message.target))} · ${escapeText(message.createdAt)}</div>
         <div>${escapeText(message.body)}</div>
-        ${message.segmentNote ? `<div class="muted">대상 메모: ${escapeText(message.segmentNote)}</div>` : ''}
+        ${message.targetUserId ? `<div class="muted">유저 ID: ${escapeText(message.targetUserId)}</div>` : ''}
         <details>
           <summary>페이로드 보기</summary>
           <pre class="payload">${escapeText(JSON.stringify(message, null, 2))}</pre>
         </details>
         <div class="row-actions">
-          <button data-message-local="${escapeText(message.id)}" type="button">로컬 발송 처리</button>
+          <button data-message-server="${escapeText(message.id)}" type="button">서버 발송 처리 표시</button>
           <button data-message-delete="${escapeText(message.id)}" class="danger" type="button">삭제</button>
         </div>
       </div>
@@ -130,15 +157,14 @@ function renderOperatorOutbox(): void {
 }
 
 function statusLabel(status: string): string {
-  if (status === 'sent-local') return '로컬 발송됨';
-  if (status === 'queued') return '대기 중';
+  if (status === 'sent-server') return '서버 발송됨';
+  if (status === 'local-draft') return '로컬 작성함';
   return status;
 }
 
 function targetLabel(target: string): string {
-  if (target === 'local-qa') return '로컬 QA';
-  if (target === 'all-users') return '전체 사용자';
-  if (target === 'segment') return '세그먼트';
+  if (target === 'all') return '전체 유저';
+  if (target === 'user') return '특정 유저';
   return target;
 }
 
@@ -293,9 +319,9 @@ function wireDynamicActions(): void {
     });
   });
 
-  document.querySelectorAll<HTMLButtonElement>('[data-message-local]').forEach((node) => {
+  document.querySelectorAll<HTMLButtonElement>('[data-message-server]').forEach((node) => {
     node.addEventListener('click', () => {
-      markMessageSentLocal(node.dataset.messageLocal ?? '');
+      markMessageSentServer(node.dataset.messageServer ?? '');
       render();
     });
   });
@@ -326,17 +352,21 @@ function boot(): void {
 
   button('refresh', render);
   button('queue-message', () => {
-    const message = queueOperatorMessage({
-      kind: selectedValue('message-kind') === 'notice' ? 'notice' : 'letter',
-      target: selectedValue('message-target') as 'local-qa' | 'all-users' | 'segment',
-      title: inputValue('message-title'),
-      body: textareaValue('message-body'),
-      segmentNote: inputValue('message-segment'),
-    });
-    byId<HTMLInputElement>('message-title').value = '';
-    byId<HTMLTextAreaElement>('message-body').value = '';
-    byId<HTMLInputElement>('message-segment').value = '';
-    window.alert(`${message.kind === 'notice' ? '공지' : '편지'} 페이로드 생성: ${message.id}`);
+    const message = queueOperatorMessage(messageInput());
+    clearMessageForm();
+    window.alert(`로컬 작성함 저장: ${message.id}`);
+  });
+  byId<HTMLButtonElement>('send-message').addEventListener('click', async () => {
+    try {
+      const input = messageInput();
+      const result = await postJson<{ message: { id: string } }>('/api/messages', input);
+      queueOperatorMessage({ ...input, id: result.message.id, status: 'sent-server' });
+      clearMessageForm();
+      render();
+      window.alert(`편지를 서버에 보냈습니다: ${result.message.id}`);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
   });
   button('clear-outbox', () => confirmDanger('작성함의 모든 운영자 페이로드를 비울까요?', clearOutbox));
 

@@ -34,24 +34,20 @@
       <section class="grid">
         <article id="messages" class="panel span-2">
           <div class="panel-head">
-            <h2>편지/공지 작성</h2>
+            <h2>운영 편지 발송</h2>
             <button id="clear-outbox" class="danger" type="button">작성함 비우기</button>
           </div>
           <div class="form-grid">
             <label>
-              종류
-              <select id="message-kind">
-                <option value="letter">편지</option>
-                <option value="notice">공지</option>
+              발송 대상
+              <select id="message-target">
+                <option value="all">전체 유저</option>
+                <option value="user">특정 유저</option>
               </select>
             </label>
             <label>
-              대상
-              <select id="message-target">
-                <option value="local-qa">로컬 QA</option>
-                <option value="all-users">전체 사용자 페이로드</option>
-                <option value="segment">세그먼트 페이로드</option>
-              </select>
+              특정 유저 ID
+              <input id="message-user-id" type="text" placeholder="특정 유저 발송 시 입력" />
             </label>
           </div>
           <label>
@@ -59,17 +55,19 @@
             <input id="message-title" type="text" placeholder="운영자가 구분할 제목" />
           </label>
           <label>
-            내용
-            <textarea id="message-body" rows="5" placeholder="보낼 편지나 공지 내용을 적어주세요"></textarea>
+            편지 내용
+            <textarea id="message-body" rows="5" placeholder="소박이 우편함에 도착할 편지 내용을 적어주세요"></textarea>
           </label>
           <label>
-            대상 메모
-            <input id="message-segment" type="text" placeholder="선택: 대상 조건이나 메모" />
+            서명
+            <input id="message-sig" type="text" value="— 소박이" />
           </label>
-          <button id="queue-message" type="button">발송 페이로드 만들기</button>
+          <div class="button-grid">
+            <button id="send-message" type="button">서버로 편지 보내기</button>
+            <button id="queue-message" type="button">로컬 작성함에만 저장</button>
+          </div>
           <p class="hint">
-            커스텀 편지/공지는 현재 운영자 작성함에만 저장됩니다. 앱이 바로 읽는 것은 기존 편지 ID 전달,
-            읽음 상태, 아이템/상태 조작입니다.
+            전체 유저 편지는 모든 앱 설치에 도착합니다. 특정 유저 편지는 앱의 로컬 admin user id와 일치할 때만 도착합니다.
           </p>
         </article>
 

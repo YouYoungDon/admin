@@ -111,12 +111,13 @@ export type OperatorMessageKind = 'letter' | 'notice';
 
 export type OperatorMessage = {
   id: string;
-  kind: OperatorMessageKind;
+  kind: 'letter';
   title: string;
   body: string;
-  target: 'local-qa' | 'all-users' | 'segment';
-  segmentNote?: string;
-  status: 'draft' | 'queued' | 'sent-local';
+  sig: string;
+  target: 'all' | 'user';
+  targetUserId?: string;
+  status: 'local-draft' | 'sent-server';
   createdAt: string;
   updatedAt: string;
 };

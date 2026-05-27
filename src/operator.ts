@@ -38,43 +38,49 @@ export function listAuditLog(): AuditEntry[] {
 }
 
 export function queueOperatorMessage(input: {
-  kind: OperatorMessage['kind'];
   title: string;
   body: string;
   target: OperatorMessage['target'];
-  segmentNote?: string;
+  sig: string;
+  targetUserId?: string;
+  status?: OperatorMessage['status'];
+  id?: string;
 }): OperatorMessage {
   const now = new Date().toISOString();
   const message: OperatorMessage = {
-    id: id(input.kind),
-    kind: input.kind,
+    id: input.id ?? id('letter'),
+    kind: 'letter',
     title: input.title.trim(),
     body: input.body.trim(),
+    sig: input.sig.trim() || '— 소박이',
     target: input.target,
-    segmentNote: input.segmentNote?.trim() || undefined,
-    status: 'queued',
+    targetUserId: input.target === 'user' ? input.targetUserId?.trim() : undefined,
+    status: input.status ?? 'local-draft',
     createdAt: now,
     updatedAt: now,
   };
 
   if (!message.title || !message.body) {
-    throw new Error('Title and body are required.');
+    throw new Error('제목과 내용을 입력해야 합니다.');
+  }
+  if (message.target === 'user' && !message.targetUserId) {
+    throw new Error('특정 유저에게 보내려면 유저 ID가 필요합니다.');
   }
 
   saveJson(ADMIN_KEYS.OPERATOR_OUTBOX, [message, ...listOutbox()]);
-  audit(`queue-${message.kind}`, `${message.id} queued for ${message.target}`);
+  audit('queue-letter', `${message.id} queued for ${message.target}`);
   return message;
 }
 
-export function markMessageSentLocal(messageId: string): void {
+export function markMessageSentServer(messageId: string): void {
   const now = new Date().toISOString();
   const next = listOutbox().map((message) => (
     message.id === messageId
-      ? { ...message, status: 'sent-local' as const, updatedAt: now }
+      ? { ...message, status: 'sent-server' as const, updatedAt: now }
       : message
   ));
   saveJson(ADMIN_KEYS.OPERATOR_OUTBOX, next);
-  audit('mark-message-sent-local', messageId);
+  audit('mark-message-sent-server', messageId);
 }
 
 export function deleteMessage(messageId: string): void {
