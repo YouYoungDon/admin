@@ -84,6 +84,7 @@
             <button id="reset-mailbox" class="danger" type="button">우편함 초기화</button>
           </div>
           <div id="mailbox-summary" class="summary"></div>
+          <button id="op-reset-mailbox" class="danger" type="button">운영 우편함 초기화</button>
           <div id="mailbox-list" class="list"></div>
         </article>
 
@@ -96,6 +97,10 @@
             <select id="letter-select"></select>
           </label>
           <button id="force-letter" type="button">선택한 편지 전달</button>
+          <button id="op-deliver-letter" type="button">운영 지급</button>
+          <button id="op-read-letter" type="button">운영 읽음 처리</button>
+          <button id="op-unread-letter" type="button">운영 안읽음 처리</button>
+          <p class="hint">운영 버튼은 위 편지 발송 영역의 대상 설정을 사용합니다.</p>
         </article>
 
         <article id="items" class="panel span-2">
@@ -104,6 +109,7 @@
             <div class="actions">
               <button id="clear-discovery" class="danger" type="button">발견 대기열 비우기</button>
               <button id="reset-bag" class="danger" type="button">가방/발견 초기화</button>
+              <button id="op-reset-discovery" class="danger" type="button">운영 초기화</button>
             </div>
           </div>
           <div id="discovery-summary" class="summary"></div>
@@ -129,6 +135,8 @@
           </label>
           <button id="enqueue-item" type="button">발견 대기열에 넣기</button>
           <button id="keep-item" type="button">가방에 보관 처리</button>
+          <button id="op-enqueue-item" type="button">운영 대기열 지급</button>
+          <button id="op-keep-item" type="button">운영 가방 지급</button>
           <button id="sample-discovery" type="button">샘플 발견 만들기</button>
         </article>
 
@@ -185,6 +193,7 @@
             <input id="total-record-input" type="number" min="0" step="1" value="0" />
           </label>
           <button id="op-set-user-counts" type="button">기록 카운트 저장</button>
+          <button id="op-set-user-counts-remote" type="button">운영 카운트 저장</button>
           <label>
             현재 감정
             <select id="emotion-select">
@@ -206,6 +215,7 @@
             <input id="room-stage-input" type="number" min="1" max="5" step="1" value="1" />
           </label>
           <button id="op-set-room-stage" type="button">방 단계 저장</button>
+          <button id="op-set-room-stage-remote" type="button">운영 방 단계 저장</button>
           <label>
             마지막 방문일
             <input id="last-visit-input" type="date" />

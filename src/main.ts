@@ -115,6 +115,23 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   return payload as T;
 }
 
+function operationTarget() {
+  const target = selectedValue('message-target') === 'user' ? 'user' : 'all';
+  return {
+    target,
+    targetUserId: target === 'user' ? inputValue('message-user-id') : undefined,
+  } as const;
+}
+
+async function sendOperation(type: string, payload: Record<string, unknown>): Promise<void> {
+  const result = await postJson<{ operation: { id: string } }>('/api/ops', {
+    type,
+    payload,
+    ...operationTarget(),
+  });
+  window.alert(`운영 작업 생성: ${result.operation.id}`);
+}
+
 function messageInput() {
   const target = selectedValue('message-target') === 'user' ? 'user' : 'all';
   return {
@@ -372,6 +389,38 @@ function boot(): void {
 
   button('force-letter', () => forceDeliverLetter(selectedValue('letter-select')));
   button('reset-mailbox', () => confirmDanger('전달/읽음 우편함 상태를 초기화할까요?', resetMailbox));
+  byId<HTMLButtonElement>('op-deliver-letter').addEventListener('click', async () => {
+    try {
+      await sendOperation('deliver_letter', { letterId: selectedValue('letter-select') });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
+  byId<HTMLButtonElement>('op-read-letter').addEventListener('click', async () => {
+    try {
+      await sendOperation('mark_letter_read', { letterId: selectedValue('letter-select') });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
+  byId<HTMLButtonElement>('op-unread-letter').addEventListener('click', async () => {
+    try {
+      await sendOperation('mark_letter_unread', { letterId: selectedValue('letter-select') });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
+  byId<HTMLButtonElement>('op-reset-mailbox').addEventListener('click', async () => {
+    try {
+      await sendOperation('reset_mailbox', {});
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
 
   button('enqueue-item', () => forceEnqueueItem(selectedValue('item-select')));
   button('keep-item', () => forceKeepItem(selectedValue('item-select')));
@@ -385,6 +434,30 @@ function boot(): void {
     resetFoundTrinkets();
     resetDiscoveryAndBagState();
   }));
+  byId<HTMLButtonElement>('op-enqueue-item').addEventListener('click', async () => {
+    try {
+      await sendOperation('enqueue_item', { itemId: selectedValue('item-select') });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
+  byId<HTMLButtonElement>('op-keep-item').addEventListener('click', async () => {
+    try {
+      await sendOperation('keep_item', { itemId: selectedValue('item-select') });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
+  byId<HTMLButtonElement>('op-reset-discovery').addEventListener('click', async () => {
+    try {
+      await sendOperation('reset_discovery', {});
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
   button('op-add-kept', () => addKeptItem(selectedValue('operator-item-select')));
   button('op-remove-kept', () => removeKeptItem(selectedValue('operator-item-select')));
   button('op-add-found', () => addFoundItem(selectedValue('operator-item-select')));
@@ -401,9 +474,31 @@ function boot(): void {
     streak: numberValue('streak-input'),
     totalRecordCount: numberValue('total-record-input'),
   }));
+  byId<HTMLButtonElement>('op-set-user-counts-remote').addEventListener('click', async () => {
+    try {
+      await sendOperation('set_user_state', {
+        recordedDaysCount: numberValue('recorded-days-input'),
+        streak: numberValue('streak-input'),
+        totalRecordCount: numberValue('total-record-input'),
+      });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
   button('op-set-emotion', () => setLastEmotion(selectedValue('emotion-select')));
   button('op-set-pebbles', () => setPebbleCount(numberValue('pebble-count-input')));
   button('op-set-room-stage', () => setRoomStage(numberValue('room-stage-input')));
+  byId<HTMLButtonElement>('op-set-room-stage-remote').addEventListener('click', async () => {
+    try {
+      await sendOperation('set_user_state', {
+        roomStage: numberValue('room-stage-input'),
+      });
+      render();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : String(error));
+    }
+  });
   button('op-set-last-visit', () => setLastVisitDate(inputValue('last-visit-input')));
 
   button('seed-expenses', seedExampleExpenses);

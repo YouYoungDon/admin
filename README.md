@@ -56,6 +56,8 @@ The same server exposes:
 - `GET /api/messages` - list operator letters.
 - `DELETE /api/messages/:id` - remove an operator letter.
 - `GET /api/letters?userId=...` - app-facing letter feed.
+- `POST /api/ops` - create an operational command for all users or one user.
+- `GET /api/ops/pending?userId=...` - app-facing operational command feed.
 
 ## Verify
 
@@ -88,6 +90,14 @@ npm run build
   - inspect generated JSON payloads
   - delete/clear queued letters
   - audit operator actions
+
+- Operational commands:
+  - grant a built-in mailbox letter
+  - mark a mailbox letter read/unread
+  - reset mailbox state
+  - enqueue or keep an item
+  - reset discovery/bag state
+  - set recordedDaysCount, streak, totalRecordCount, and room stage
 
 - Mailbox:
   - delivered/read/unread listing

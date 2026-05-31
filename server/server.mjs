@@ -5,6 +5,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 
 const root = resolve('dist');
 const dataFile = resolve('data/messages.json');
+const opsFile = resolve('data/operations.json');
 const port = Number(process.env.PORT ?? 4173);
 
 const contentTypes = {
@@ -14,14 +15,14 @@ const contentTypes = {
   '.json': 'application/json; charset=utf-8',
 };
 
-async function readJson() {
-  if (!existsSync(dataFile)) return [];
-  return JSON.parse(await readFile(dataFile, 'utf8'));
+async function readJson(file = dataFile) {
+  if (!existsSync(file)) return [];
+  return JSON.parse(await readFile(file, 'utf8'));
 }
 
-async function writeJson(rows) {
-  await mkdir(dirname(dataFile), { recursive: true });
-  await writeFile(dataFile, JSON.stringify(rows, null, 2), 'utf8');
+async function writeJson(rows, file = dataFile) {
+  await mkdir(dirname(file), { recursive: true });
+  await writeFile(file, JSON.stringify(rows, null, 2), 'utf8');
 }
 
 function sendJson(res, status, body) {
@@ -59,6 +60,52 @@ async function handleApi(req, res, url) {
 
   if (url.pathname === '/api/messages' && req.method === 'GET') {
     sendJson(res, 200, { messages: await readJson() });
+    return;
+  }
+
+  if (url.pathname === '/api/ops' && req.method === 'GET') {
+    sendJson(res, 200, { operations: await readJson(opsFile) });
+    return;
+  }
+
+  if (url.pathname === '/api/ops' && req.method === 'POST') {
+    const body = await readBody(req);
+    const type = String(body.type ?? '').trim();
+    const target = body.target === 'user' ? 'user' : 'all';
+    const targetUserId = target === 'user' ? String(body.targetUserId ?? '').trim() : undefined;
+    const payload = typeof body.payload === 'object' && body.payload !== null ? body.payload : {};
+
+    if (!type) {
+      sendJson(res, 400, { error: 'type is required' });
+      return;
+    }
+    if (target === 'user' && !targetUserId) {
+      sendJson(res, 400, { error: 'targetUserId is required for user target' });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const operation = {
+      id: `admin-op-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      type,
+      target,
+      targetUserId,
+      payload,
+      createdAt: now,
+    };
+    const rows = await readJson(opsFile);
+    await writeJson([operation, ...rows], opsFile);
+    sendJson(res, 201, { operation });
+    return;
+  }
+
+  if (url.pathname === '/api/ops/pending' && req.method === 'GET') {
+    const userId = url.searchParams.get('userId') ?? '';
+    const rows = await readJson(opsFile);
+    const operations = rows
+      .filter((op) => op.target === 'all' || (op.target === 'user' && op.targetUserId === userId))
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+    sendJson(res, 200, { userId, operations });
     return;
   }
 
